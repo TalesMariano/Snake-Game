@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,17 +6,18 @@ public class Block : MonoBehaviour
 {
     public BlockType blockType;
 
-    
-    void Start()
-    {
-        
-    }
+    public int weight = 1;
 
+    public Action OnEat;
     
-    void BeingEaten()
+    public void BeingEaten()
     {
         if (blockType == BlockType.Food)
             blockType = BlockType.Snake;
+
+        OnEat?.Invoke();
+
+        OnEat = null;
     }
 }
 

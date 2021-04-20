@@ -7,6 +7,12 @@ public class TestKeyboard : MonoBehaviour
     public KeyCode key1;
     public KeyCode key2;
 
+    public bool testCheck;
+
+    float timerHold = 0;
+
+    public TempSnakeSpawner snakeSpawner;
+
 
     Dictionary<KeyCode, int> dictionary = new Dictionary<KeyCode, int>()
     {
@@ -48,20 +54,68 @@ public class TestKeyboard : MonoBehaviour
         {KeyCode.P, 101}
     };
 
-    enum TestKey
-    {
-        
-    }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
     void Update()
     {
+
+        if (Input.anyKeyDown)
+        {
+            if (!Input.GetKey(key1))
+            {
+                // Get Key 1
+                foreach (KeyValuePair<KeyCode, int> entry in dictionary)
+                {
+                    if (entry.Key != key2 && Input.GetKey(entry.Key))
+                    {
+                        key1 = entry.Key;
+                    }
+                }
+            }
+
+            if (!Input.GetKey(key2))
+            {
+                // Get Key 2
+                foreach (KeyValuePair<KeyCode, int> entry in dictionary)
+                {
+                    if (entry.Key != key1 && Input.GetKeyDown(entry.Key))
+                    {
+                        key2 = entry.Key;
+                    }
+                }
+            }
+        }
+
+
+
+
+
+
+
+
+        //timer
+        if (Input.GetKey(key1) && Input.GetKey(key2))
+        {
+            timerHold += Time.deltaTime;
+
+            if (timerHold > 2 && !testCheck)
+            {
+                testCheck = true;
+
+                TempSpawnSnake();
+            }
+                
+        }
+
+
+        // Reset Timer
+        if (Input.GetKeyUp(key1) || Input.GetKeyUp(key2))
+        {
+            timerHold = 0;
+            testCheck = false;
+        }
+
+        /*
+
         foreach (KeyValuePair<KeyCode, int> entry in dictionary)
         {
             if (Input.GetKey(entry.Key))
@@ -72,7 +126,7 @@ public class TestKeyboard : MonoBehaviour
                     key1 = entry.Key;
 
             }
-        }
+        }*/
 
         /*
         foreach (KeyCode vKey in System.Enum.GetValues(typeof(KeyCode)))
@@ -84,5 +138,29 @@ public class TestKeyboard : MonoBehaviour
 
             }
         }*/
+    }
+
+    void TempSpawnSnake()
+    {
+        
+
+        PlayerController pc = snakeSpawner.SpawnSnake().GetComponent<PlayerController>();
+
+        pc.keyLeft = OrderKeyCodes(key1, key2)[0];
+        pc.keyRight = OrderKeyCodes(key1, key2)[1];
+    }
+
+
+    public KeyCode[] OrderKeyCodes(KeyCode key1, KeyCode key2)
+    {
+        int value1, value2;
+
+        dictionary.TryGetValue(key1, out value1);
+        dictionary.TryGetValue(key2, out value2);
+
+        if (value1 < value2)
+            return new KeyCode[] { key1, key2 };
+        else
+            return new KeyCode[] { key2, key1 };
     }
 }

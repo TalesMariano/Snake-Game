@@ -21,6 +21,11 @@ public class TempSnakeCollider : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        
+        if(other.tag == "Block")
+        {
+            Block b = other.GetComponent<Block>();
+
+            
+        }
     }
 }

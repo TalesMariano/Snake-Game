@@ -12,6 +12,10 @@ public class TempFoodSpawner : MonoBehaviour
     {
         GameObject go = Instantiate(foodPrefab, (Vector3Int)pos, Quaternion.identity) as GameObject;
 
-        return go.GetComponent<Block>();
+        Food food = go.GetComponent<Food>();
+
+        return food.block;
+
+        //return go.GetComponent<Block>();
     }
 }

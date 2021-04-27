@@ -7,7 +7,7 @@ public class AIController : MonoBehaviour, IController
     public Snake tempSnake;
 
 
-    [SerializeField] public Transform targetBlock;
+    [SerializeField] public Block targetBlock;
     public Vector2Int targetPos;
 
     [SerializeField] private Vector2Int[] path;
@@ -25,10 +25,11 @@ public class AIController : MonoBehaviour, IController
 
     public void SetTarget(Block block, Vector2Int pos)
     {
-        targetBlock = block.transform;
+        targetBlock = block;
+        // Replace - Food Obj
         targetPos = pos;
 
-        //PathAndUpdMove();
+        PathAndUpdMove();
     }
 
 
@@ -47,11 +48,11 @@ public class AIController : MonoBehaviour, IController
     {
         MapGrid grid = MapGrid.instance;
 
-        if (!targetBlock)
+        if (targetBlock == null)
             return;
 
-
-        targetPos = Vector2Int.FloorToInt(targetBlock.transform.position);
+         
+        //targetPos = Vector2Int.FloorToInt(targetBlock.transform.position); // delete this
 
 
         path = AStarSearch.StarSearch(grid, tempSnake.pos, targetPos);

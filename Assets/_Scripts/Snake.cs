@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,14 +11,20 @@ public class Snake : MonoBehaviour
     public Vector2Int direction = Vector2Int.up;
 
     public float speed = 10;
+    [SerializeField] float weight;
 
-    List<Transform> nodes = new List<Transform>();
-    List<Vector2Int> nodePos = new List<Vector2Int>();
+    public List<Block> nodes = new List<Block>(); // chaqnge to gget
+    public List<Vector2Int> nodePos = new List<Vector2Int>();
 
 
     public bool moving = true;
     bool haveTurned = false;
     bool eatenThisMove = false;
+
+
+    // Actions
+    public Action OnMove;
+    public Action TestCallback;
 
 
 
@@ -28,24 +35,22 @@ public class Snake : MonoBehaviour
         StopAllCoroutines();
         StartCoroutine(TestMove());
 
-        // Temp
-        foreach (var item in nodes)
-        {
-            item.transform.parent = null;
-        }
+        CalculateSpeed();
     }
 
     void MoveOneStep()
     {
+        //CalculateSpeed();
+
         // 
         Vector2Int nextPosition = pos + direction;
 
         // Check Colision
 
         // Check for end of map
-        if(MapGrid.instance.CheckPosValid(nextPosition) == false)   // if get outside map
+        if(MapGrid.instance.CheckPosValid(nextPosition) == false /*|| MapGrid.instance.PositionWall(nextPosition)*/)   // if get outside map
         {
-            Die();
+            OnColision();
             return;
         }
 
@@ -64,7 +69,7 @@ public class Snake : MonoBehaviour
 
             MoveNodes();
 
-            return;
+            //return;
         }
 
         //its food
@@ -84,25 +89,68 @@ public class Snake : MonoBehaviour
             haveTurned = false;
 
             //MoveNodes();
+        }else if (targetBlock.blockType == BlockType.Snake)
+        {
+            BeforeCollision(targetBlock);
+
+            transform.position += (Vector3Int)direction;
+
+            pos += direction;
+
+
+            haveTurned = false;
+
+            MoveNodes();
         }
 
+            OnMove?.Invoke();
+    }
 
+    void BeforeCollision(Block collidingEnemyBlock)
+    {
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            //if(nodes[i].Active && nodes[i].GetComponent<IColission>() != null)
+            if(nodes[i].Active && nodes[i] is IColission)
+            {
+
+                IColission col = nodes[i] as IColission;
+
+                Action fCollision;// += OnColision;
+                //fCollision += OnColision;
+                TestCallback = OnColision;
+
+                col.OnCollision(collidingEnemyBlock, TestCallback);
+
+
+                return;
+            }
+        }
+
+        OnColision();
+    }
+
+
+    void OnColision()
+    {
+        Die();
     }
 
     void Die()
     {
         Destroy(this.gameObject);
 
+        /*
         foreach (var node in nodes)
         {
             Destroy(node.gameObject);
-        }
+        }*/
     }
 
 
     public void AddBlock(Block block, Vector2Int pos)
     {
-        nodes.Insert(0, block.transform);
+        nodes.Insert(0, block);
         nodePos.Insert(0, pos);
     }
 
@@ -112,14 +160,14 @@ public class Snake : MonoBehaviour
         nodePos.Insert(0, pos);
     }
 
-
-    void Eat (Block node)
+    // FIX - Remove Public
+    public void Eat (Block node)
     {
         Debug.Log("Eat");
 
         node.BeingEaten();
 
-        nodes.Insert(0, node.transform);
+        nodes.Insert(0, node);
         AddNode(pos);
 
         //MoveNodes();
@@ -128,22 +176,39 @@ public class Snake : MonoBehaviour
 
     void MoveNodes()
     {
+        // Remove Blocks Grid
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            MapGrid.instance.RemoveBlock(nodePos[i]);
+        }
+
+
+
         for (int i = nodes.Count-1; i >= 1; i--)
         {
             nodePos[i] = nodePos[i - 1];
 
-            nodes[i].position = (Vector3Int)nodePos[i - 1];
+            //nodes[i].transform.position = (Vector3Int)nodePos[i - 1];
 
             // Temp code
-            MapGrid.instance.Moveblock(nodePos[i], nodePos[i - 1]);
+            // Error Overlaping blocks during ram
+            //MapGrid.instance.Moveblock(nodePos[i], nodePos[i - 1]);
 
         }
 
+
         nodePos[0] = pos;
-        MapGrid.instance.Moveblock(nodePos[0], pos);
+        //MapGrid.instance.Moveblock(nodePos[0], pos);
+
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            MapGrid.instance.AddBlock(nodes[i], nodePos[i]);
+        }
+
+        //nodes[0].transform.position = (Vector3Int)pos;
 
 
-        nodes[0].position = (Vector3Int)pos;
+        
     }
 
 
@@ -153,13 +218,18 @@ public class Snake : MonoBehaviour
             return;
 
         if (dir == 1)
-            direction = TurnRight(direction);
+            direction = Vector2Functions.TurnRight(direction);
         else
-            direction = TurnLeft(direction);
+            direction = Vector2Functions.TurnLeft(direction);
 
 
-        transform.Rotate(Vector3.forward, -90 * dir);
+        //transform.Rotate(Vector3.forward, -90 * dir);
         haveTurned = true;
+    }
+
+    public void SetTurn(Vector2Int dir)
+    {
+        direction = dir;
     }
 
 
@@ -168,7 +238,15 @@ public class Snake : MonoBehaviour
     /// </summary>
     void CalculateSpeed()
     {
+        float totalWeight = 0;
+        foreach (var item in nodes)
+        {
+            totalWeight += item.Weight;
+        }
 
+        float baseWeight = 5;
+
+        weight = Mathf.Clamp(baseWeight + totalWeight, 1, int.MaxValue);
     }
 
     IEnumerator TestMove()
@@ -179,46 +257,11 @@ public class Snake : MonoBehaviour
             {
                 MoveOneStep();
 
-                yield return new WaitForSeconds(1*10 / speed);
+                yield return new WaitForSeconds(1* weight / speed);
             }
 
 
         } while (moving);
-    }
-
-
-    Vector2Int TurnRight(Vector2Int dir)
-    {
-        if (dir == Vector2Int.up)
-            return Vector2Int.right;
-        else if (dir == Vector2Int.right)
-            return Vector2Int.down;
-        else if (dir == Vector2Int.down)
-            return Vector2Int.left;
-        else if (dir == Vector2Int.left)
-            return Vector2Int.up;
-        else
-        {
-            Debug.LogError("ERROR");
-            return dir; // ERR
-        } 
-    }
-
-    Vector2Int TurnLeft(Vector2Int dir)
-    {
-        if (dir == Vector2Int.up)
-            return Vector2Int.left;
-        else if (dir == Vector2Int.left)
-            return Vector2Int.down;
-        else if (dir == Vector2Int.down)
-            return Vector2Int.right;
-        else if (dir == Vector2Int.right)
-            return Vector2Int.up;
-        else
-        {
-            Debug.LogError("ERROR");
-            return dir; // ERR
-        }
     }
 }
 

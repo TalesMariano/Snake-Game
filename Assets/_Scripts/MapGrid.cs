@@ -32,7 +32,20 @@ public class MapGrid : MonoBehaviour
 
     public Vector2Int RandomEmptyPos()
     {
-        return new Vector2Int(Random.Range(0, size.x), Random.Range(0, size.y));
+        //return new Vector2Int(Random.Range(0, size.x), Random.Range(0, size.y));
+
+        Vector2Int pos;
+
+        do
+        {
+            pos = new Vector2Int(Random.Range(0, size.x), Random.Range(0, size.y));
+
+            if (PositionEmpty(pos))
+                return pos;
+
+
+        } while (true);
+
     }
 
     public void AddBlock(Block block, Vector2Int pos)
@@ -60,7 +73,7 @@ public class MapGrid : MonoBehaviour
         }
 
         if (blockGrid[pos.x, pos.y] == null)
-            Debug.LogError("Possition already empty");
+            Debug.Log("Possition already empty");
         else
             blockGrid[pos.x, pos.y] = null;
 
@@ -77,6 +90,22 @@ public class MapGrid : MonoBehaviour
 
     }
 
+
+    public bool PositionEmpty(Vector2Int pos)
+    {
+        return blockGrid[pos.x, pos.y] == null;
+    }
+
+
+    public bool PositionWall(Vector2Int pos)
+    {
+        if (blockGrid[pos.x, pos.y] == null)
+            return false;
+        else if (blockGrid[pos.x, pos.y].blockType != BlockType.Food)
+            return true;
+        return false;
+    }
+
     public bool CheckPosValid(Vector2Int pos)
     {
         if (pos.x >= size.x || pos.x < 0 || pos.y >= size.y || pos.y < 0)
@@ -84,4 +113,29 @@ public class MapGrid : MonoBehaviour
 
         return true;
     }
+
+    public bool PositionPassable(Vector2Int pos)
+    {
+        return (CheckPosValid(pos) && (blockGrid[pos.x, pos.y] == null));
+    }
+
+
+    // Temp
+
+    public int Cost(Vector2Int pos)
+    {
+        if (blockGrid[pos.x, pos.y] == null)
+            return 1;
+        else
+            return System.Int32.MaxValue;
+    }
+
+
+    public Vector2Int SpawnPositionSnake()
+    {
+        return new Vector2Int(Random.Range(2, size.x-2), Random.Range(0+2, size.y-2));
+
+    }
+
+
 }

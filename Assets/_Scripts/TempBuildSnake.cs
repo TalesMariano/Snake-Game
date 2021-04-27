@@ -10,15 +10,14 @@ public class TempBuildSnake : MonoBehaviour
 
     private void Start()
     {
-        BuildSnake();
+        if(GetComponent<Snake>())
+            BuildSnake(GetComponent<Snake>());
     }
 
 
     [ContextMenu("BuildSnake")]
-    void BuildSnake()
+    public void BuildSnake(Snake snake)
     {
-        Snake snake = GetComponent<Snake>();
-
         for (int i = 0; i < 3; i++)
         {
             Vector2Int pos = snake.pos + Vector2Int.down * (2-i);
@@ -28,6 +27,10 @@ public class TempBuildSnake : MonoBehaviour
             print(go);
 
             Block node = go.GetComponent<Block>();
+
+            node.blockType = BlockType.Snake;
+
+            MapGrid.instance.AddBlock(node, pos);
 
             snake.AddBlock(node, pos);
 

@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public class Block 
 {
     public int id;
 
     public Sprite sprite;
 
-    bool active = true;
+    [SerializeField] bool active = true;
     public bool Active
     {
         get { return active; }
@@ -45,6 +46,12 @@ public class Block
 
 
         OnEat = null;
+    }
+
+
+    public object Copy()
+    {
+        return this.MemberwiseClone();
     }
 }
 

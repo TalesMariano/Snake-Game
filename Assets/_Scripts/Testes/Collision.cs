@@ -3,18 +3,26 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class BlockRam : Block, IColission
+public class Collision : Block, IColission
 {
     public void OnCollision(Block otherBlock, Action callback)
     {
-        // Disable this block
+        CollisionRam(otherBlock, callback);
+    }
+
+    void CollisionRam(Block otherBlock, Action callback)
+    {
+        // Disable this
         Active = false;
 
         // Disable coliding Block
         otherBlock.Active = false;
-
-        // Move snake foward
+        // Move foward
         //do Nothing should move foward already
+    }
+
+    void BaseCollision(Block otherBlock, Action callback)
+    {
+        callback?.Invoke();
     }
 }

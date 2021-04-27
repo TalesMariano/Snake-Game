@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class TestKeyboard : MonoBehaviour
 {
+    public GameManager gameManager;
+
     public KeyCode key1;
     public KeyCode key2;
 
@@ -142,12 +144,17 @@ public class TestKeyboard : MonoBehaviour
 
     void TempSpawnSnake()
     {
-        
-
+        gameManager.AddNewPlayer();
         PlayerController pc = snakeSpawner.SpawnSnake().GetComponent<PlayerController>();
 
         pc.keyLeft = OrderKeyCodes(key1, key2)[0];
         pc.keyRight = OrderKeyCodes(key1, key2)[1];
+
+        /*
+        PlayerController pc = snakeSpawner.SpawnSnake().GetComponent<PlayerController>();
+
+        pc.keyLeft = OrderKeyCodes(key1, key2)[0];
+        pc.keyRight = OrderKeyCodes(key1, key2)[1];*/
     }
 
 

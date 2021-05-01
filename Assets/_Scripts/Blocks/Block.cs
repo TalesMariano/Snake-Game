@@ -5,7 +5,8 @@ using UnityEngine;
 [System.Serializable]
 public class Block 
 {
-    public int id;
+    public int playerId;
+    public int score =100;
 
     public Sprite sprite;
 
@@ -36,13 +37,13 @@ public class Block
     public Action OnEat;
     public Action<int> OnEatId;
     
-    public void BeingEaten()
+    public virtual void BeingEaten()
     {
         if (blockType == BlockType.Food)
             blockType = BlockType.Snake;
 
         OnEat?.Invoke();
-        OnEatId?.Invoke(id);
+        OnEatId?.Invoke(playerId);
 
 
         OnEat = null;

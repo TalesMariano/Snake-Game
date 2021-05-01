@@ -16,12 +16,22 @@ public class SnakeVisual : MonoBehaviour
     void Awake()
     {
         if(!snake) snake = GetComponent<Snake>();
-        
+
+        ColorSnake(ColorFunctions.RandomColor());
+
         FixNumberSpriteRenderer();
     }
 
     private void Update()
     {
+        if (!snake.alive)
+        {
+            ClearSnake();
+            return;
+        }
+            
+
+
         UpdateLineRenderer();
         UpdateSprites();
 
@@ -58,6 +68,19 @@ public class SnakeVisual : MonoBehaviour
         //Upd head pos
         snakeHead.position = (Vector3Int)snake.pos;
     }
+
+    void ClearSnake()
+    {
+        foreach (var sr in spriteRenderers)
+        {
+            sr.color = Color.clear;
+        }
+
+        lineRenderer.positionCount = 0;
+
+        snakeHead.gameObject.SetActive(false);
+    }
+
 
     [ContextMenu("FixNumberSpriteRenderer")]
     void FixNumberSpriteRenderer()
@@ -97,9 +120,11 @@ public class SnakeVisual : MonoBehaviour
         snakeHead.rotation =  Quaternion.LookRotation((Vector3Int) snake.direction, Vector3.back);
     }
 
-    private void OnDrawGizmos()
+    void ColorSnake(Color color)
     {
-        Gizmos.color = Color.blue;
-        Gizmos.DrawLine(transform.position, Vector3.back);
+        lineRenderer.startColor = color;
+        lineRenderer.endColor = color;
     }
+
+
 }

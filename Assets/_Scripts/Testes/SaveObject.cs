@@ -8,16 +8,8 @@ public class SaveObject
 
     [SerializeField] private List<Snake> snakesPlayers = new List<Snake>();
     [SerializeField] private List<Snake> snakesAI = new List<Snake>();
-    [SerializeField] private List<Block> foods = new List<Block>();
 
-
-
-
-    //This is forGame MAnager
-    void LoadSave()
-    {
-
-
-
-    }
 }
+
+
+

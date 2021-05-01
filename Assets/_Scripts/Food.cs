@@ -12,7 +12,7 @@ public class Food : MonoBehaviour
 
     public ListBlocks.BlockTypes blockType;
 
-    public Block block; // Set get here
+    public Block block; // implementet get here
 
     private void Awake()
     {
@@ -31,6 +31,11 @@ public class Food : MonoBehaviour
         block.OnEatId -= DestroyThis;
     }
 
+
+    public void SetBlock(Block block)
+    {
+
+    }
 
     public Block GetBlock()
     {

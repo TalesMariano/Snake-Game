@@ -7,13 +7,16 @@ public class Snake : MonoBehaviour
 {
     public int id;
 
+    public bool alive = true;
+
+
     public Vector2Int pos;
     public Vector2Int direction = Vector2Int.up;
 
     public float speed = 10;
     [SerializeField] float weight;
 
-    public List<Block> nodes = new List<Block>(); // chaqnge to gget
+    public List<Block> nodes = new List<Block>(); // Fix - Change to Get
     public List<Vector2Int> nodePos = new List<Vector2Int>();
 
 
@@ -24,6 +27,8 @@ public class Snake : MonoBehaviour
 
     // Actions
     public Action OnMove;
+    public Action OnEat;
+    public Action<int,int> OnEatScore;
     public Action TestCallback;
 
 
@@ -38,6 +43,9 @@ public class Snake : MonoBehaviour
         CalculateSpeed();
     }
 
+    /// <summary>
+    /// Fix - This is really bad
+    /// </summary>
     void MoveOneStep()
     {
         //CalculateSpeed();
@@ -75,28 +83,31 @@ public class Snake : MonoBehaviour
         //its food
         else if (targetBlock.blockType == BlockType.Food)
         {
+            pos += direction;
+
             Eat(targetBlock);
 
             MapGrid.instance.RemoveBlock(nextPosition);
 
-
+            
 
             transform.position += (Vector3Int)direction;
 
-            pos += direction;
-
+            
 
             haveTurned = false;
 
             //MoveNodes();
-        }else if (targetBlock.blockType == BlockType.Snake)
+        }
+        else if (targetBlock.blockType == BlockType.Snake)
         {
-            BeforeCollision(targetBlock);
+            
 
-            transform.position += (Vector3Int)direction;
+            BeforeCollision(targetBlock);
 
             pos += direction;
 
+            transform.position += (Vector3Int)direction;
 
             haveTurned = false;
 
@@ -133,12 +144,56 @@ public class Snake : MonoBehaviour
 
     void OnColision()
     {
+        BeforeDie();
+
+
+
+    }
+    
+    void BeforeDie()
+    {
+        
+
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            if (nodes[i].Active && nodes[i] is IBeforeDeath)
+            {
+                print(string.Format("Before Die. nodes[i].Active {0}. nodes[i] is IBeforeDeath {1}", nodes[i].Active , nodes[i] is IBeforeDeath));
+
+                bool doContinue;
+
+                IBeforeDeath bbd = nodes[i] as IBeforeDeath;
+                /*
+                Action fCollision;// += OnColision;
+                //fCollision += OnColision;
+                TestCallback = OnColision;
+                */
+                doContinue = bbd.DoBeforeDeath();
+
+                if(!doContinue)
+                    return;
+            }
+        }
+
         Die();
     }
 
     void Die()
     {
-        Destroy(this.gameObject);
+        if (!alive)
+            return;
+
+
+        alive = false;
+
+        moving = false;
+
+        // Remove all nodes from map
+        for (int i = 0; i < nodePos.Count; i++)
+        {
+            MapGrid.instance.RemoveBlock(nodePos[i]);
+        }
+
 
         /*
         foreach (var node in nodes)
@@ -154,12 +209,6 @@ public class Snake : MonoBehaviour
         nodePos.Insert(0, pos);
     }
 
-
-    void AddNode(Vector2Int pos)
-    {
-        nodePos.Insert(0, pos);
-    }
-
     // FIX - Remove Public
     public void Eat (Block node)
     {
@@ -168,7 +217,12 @@ public class Snake : MonoBehaviour
         node.BeingEaten();
 
         nodes.Insert(0, node);
-        AddNode(pos);
+        nodePos.Insert(0, pos);
+
+        CalculateSpeed();
+
+        // When eat, add score to player id
+        OnEatScore?.Invoke(id, node.score); 
 
         //MoveNodes();
     }
@@ -211,7 +265,28 @@ public class Snake : MonoBehaviour
         
     }
 
+    public void PrepareToLoad()
+    {
+        // Remove all nodes from map
+        for (int i = 0; i < nodePos.Count; i++)
+        {
+            MapGrid.instance.RemoveBlock(nodePos[i]);
+        }
+    }
 
+
+    public void BeforeLoad()
+    {
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            MapGrid.instance.RemoveBlock(nodePos[i]);
+        }
+    }
+
+    /// <summary>
+    /// Turn Snake. -1 = Left, +1 = right
+    /// </summary>
+    /// <param name="dir"></param>
     public void Turn(int dir = 1)
     {
         if (haveTurned)

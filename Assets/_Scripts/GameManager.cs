@@ -4,12 +4,12 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] private Player[] players;
+    [SerializeField] public List<Player> players = new List<Player>();  // Fix - Remove public
 
 
-    [SerializeField] private List<Snake> snakesPlayers = new List<Snake>();
+    [SerializeField] public List<Snake> snakesPlayers = new List<Snake>(); // Fix - Make private
     [SerializeField] private List<Snake> snakesAI = new List<Snake>();
-    [SerializeField] private List<Block> foods = new List<Block>();
+    [SerializeField] private List<Food> foods = new List<Food>();
 
     [Header("References")]
     public MapGrid map;
@@ -17,67 +17,179 @@ public class GameManager : MonoBehaviour
     //public TempSnakeSpawner tempSnakeSpawner;
     public TestBuildSnake2 tempSnakeSpawner;
 
-
-    [ContextMenu("Spawn Food")]
-    void SpawnFoodOld()
+    #region Singleton
+    public static GameManager instance;
+    private void Awake()
     {
-        Vector2Int pos = map.RandomEmptyPos();
+        instance = this;
+    }
+    #endregion
 
-        Block newFood = foodSpawner.SpawnFood(pos);
+    #region TimeRewind
+    public void LoadWorldState(string jsonWorldState)
+    {
+        TestWorldState worldState = JsonUtility.FromJson<TestWorldState>(jsonWorldState);
 
-        foods.Add(newFood);
+        // Load Snakes Player
+        /*
+        for (int i = 0; i < snakesPlayers.Count; i++)
+        {
+            snakesPlayers[i].PrepareToLoad();
+            JsonUtility.FromJsonOverwrite(worldState.jsonSnakesPl[i], snakesPlayers[i]);
+            // Add call event onLoad            
+        }*/
 
-        newFood.OnEat += SpawnFoodOld; // <-------------------
+        // Test new load Snake
+        for (int i = 0; i < snakesPlayers.Count; i++)
+        {
+            snakesPlayers[i].PrepareToLoad();
+            worldState.saveStatePlayers[i].LoadSnake(snakesPlayers[i]);
+        }
+        
 
-        map.AddBlock(newFood, pos);
+
+        // Load Snakes AI
+        for (int i = 0; i < snakesAI.Count; i++)
+        {
+            snakesAI[i].PrepareToLoad();
+            JsonUtility.FromJsonOverwrite(worldState.jsonSnakesAi[i], snakesAI[i]);
+            // Add call event onLoad            
+        }
+
+        // Spawn new food, move Food
     }
 
-    [ContextMenu("TestRemove")]
-    void TestRemove()
+    public string SaveWorldState()
     {
-        SpawnFood(0);
+        TestWorldState worldState = new TestWorldState();
+        // Save Snakes player
+        string[] jsonSnakesPl = new string[snakesPlayers.Count];
+        for (int i = 0; i < jsonSnakesPl.Length; i++)
+        {
+            jsonSnakesPl[i] = JsonUtility.ToJson(snakesPlayers[i],true);
+        }
+        worldState.jsonSnakesPl = jsonSnakesPl;
+
+        // Test New save
+        SnakeSaveState[] snakeSaves = new SnakeSaveState[snakesPlayers.Count];
+        for (int i = 0; i < snakeSaves.Length; i++)
+        {
+            snakeSaves[i] = new SnakeSaveState(snakesPlayers[i]);
+        }
+        worldState.saveStatePlayers = snakeSaves;
+
+
+
+        // Save Snakes AI
+        string[] jsonSnakesAi = new string[snakesAI.Count];
+        for (int i = 0; i < jsonSnakesAi.Length; i++)
+        {
+            jsonSnakesAi[i] = JsonUtility.ToJson(snakesAI[i], true);
+        }
+        worldState.jsonSnakesAi = jsonSnakesAi;
+
+        // Save Food Pos
+        Vector2Int[] foodPoss = new Vector2Int[foods.Count];
+        for (int i = 0; i < foodPoss.Length; i++)
+        {
+            foodPoss[i] = foods[i].pos;
+        }
+        worldState.jsonFoodsPos = foodPoss;
+
+        return JsonUtility.ToJson(worldState, true);
     }
+
+
+    #endregion
+
+    #region Score
+
+    void AddScore(int id, int scoreAdd)
+    {
+        try
+        {
+            players[id].score += scoreAdd;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError(ex.Message);
+            throw;
+        } 
+    }
+
+    #endregion
 
 
     void SpawnFood(int id)
     {
-        
+        Vector2Int foodPos;
+        // Get Fair Position Both Player
+        if (snakesPlayers[id].alive && snakesAI[id].alive)  // If both Player Alive
+            foodPos = map.GetFairEmptyPosition(snakesPlayers[id].pos, snakesAI[id].pos);
+        else
+            foodPos = map.RandomEmptyPos();
 
-        Vector2Int pos = map.RandomEmptyPos();
 
-        Block newFood = foodSpawner.SpawnFood(pos);
 
-        newFood.id = id;
 
-        print("foods.Count " + foods.Count + " _ id " + id);
+        Food newFood = foodSpawner.SpawnFood(foodPos);
+
+        newFood.block.playerId = id;
+
+        newFood.block.OnEat += () => { foods.Remove(newFood); };
+
+
+        /*
         if (foods.Count > 0) // <------------
             foods.RemoveAt(id);
+            */
 
         foods.Insert(id, newFood);
 
-        newFood.OnEatId += SpawnFood; // <-------------------
+        newFood.block.OnEatId += SpawnFood; // Respawn food when eaten
 
-        map.AddBlock(newFood, pos);
+        map.AddBlock(newFood.block, foodPos);
 
-        snakesAI[id].GetComponent<AIController>().SetTarget(newFood, pos);
+        snakesAI[id].GetComponent<AIController>().SetTarget(newFood.block, foodPos);
     }
 
+
+
     [ContextMenu("AddNewPlayer")]
-    public void AddNewPlayer()
+    void TempAddNewPlayer()
     {
-        int id = 0;
+        AddNewPlayer();
+    }
+
+    public void AddNewPlayer(KeyCode[] keys)
+    {
+        AddNewPlayer(keys[0], keys[1]);
+    }
+
+
+    public void AddNewPlayer(KeyCode key1 = KeyCode.Z, KeyCode key2 = KeyCode.X)
+    {
+        int id = players.Count;
 
         // Add player, with id, score and stuff
+        players.Add( new Player(id, key1, key2));
+
 
 
         // spawn player snake
         Snake playerSnake = tempSnakeSpawner.CreatePlayer();
+        playerSnake.id = id;
+        playerSnake.OnEatScore += AddScore;
         snakesPlayers.Add(playerSnake);
 
         // set snake controls
+        PlayerController pc = playerSnake.GetComponent<PlayerController>();
+        pc.keyLeft = key1;
+        pc.keyRight = key2;
 
         // Add AI snake
         Snake aiSnake = tempSnakeSpawner.CreateAI();
+        aiSnake.id = id;
         snakesAI.Add(aiSnake);
 
         // Spawn food
@@ -88,7 +200,7 @@ public class GameManager : MonoBehaviour
     }
 
     [ContextMenu("StartGame")]
-    void StartGame()
+    public void StartGame()
     {
         foreach (var item in snakesPlayers)
         {
@@ -110,5 +222,13 @@ public class GameManager : MonoBehaviour
         // ? add score
 
         // set food to ai Snake
+    }
+
+
+    public enum GameState
+    {
+        AddPlayers,
+        Gameplay,
+        GameOver
     }
 }

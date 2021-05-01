@@ -71,7 +71,9 @@ public class TestBuildSnake2 : MonoBehaviour
 
     Snake SpawnSnake(GameObject prefab)
     {
-        Vector2Int pos = MapGrid.instance.SpawnPositionSnake();
+        Vector2Int dir = Vector2Int.up;
+
+        Vector2Int pos = MapGrid.instance.SpawnPositionSnake(dir);
 
         Snake s = Instantiate(prefab, (Vector3Int)pos, Quaternion.identity).GetComponent<Snake>();
 

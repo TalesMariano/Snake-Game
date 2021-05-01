@@ -7,14 +7,23 @@ public class BlockTime : Block, IBeforeDeath
 {
     public string jsonWorldState;
 
+    public override void BeingEaten()
+    {
+        SaveWorld();
+
+        base.BeingEaten();
+    }
+
 
     public void SaveWorld()
     {
-
+        jsonWorldState = GameManager.instance.SaveWorldState();
     }
 
     public void RewindTime()
     {
+        GameManager.instance.LoadWorldState(jsonWorldState);
+
         // Get reference from Game manager
 
 
@@ -23,6 +32,13 @@ public class BlockTime : Block, IBeforeDeath
         // Set food in the whorld
 
 
+    }
+
+    public bool DoBeforeDeath()
+    {
+        RewindTime();
+
+        return false;
     }
 }
 

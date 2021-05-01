@@ -10,4 +10,13 @@ public class Player
     public int score;
     public KeyCode keyLeft;
     public KeyCode keyRigth;
+
+    public Color color;
+
+    public Player(int id, KeyCode keyLeft, KeyCode keyRigth)
+    {
+        this.id = id;
+        this.keyLeft = keyLeft;
+        this.keyRigth = keyRigth;
+    }
 }

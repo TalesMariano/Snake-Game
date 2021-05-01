@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: New Test List Blocks
   m_EditorClassIdentifier: 
   blockEngine:
-    id: 0
+    playerId: 0
+    score: 100
     sprite: {fileID: 0}
+    active: 1
     blockType: 0
     activeWeight: -1
   blockEnum: 0

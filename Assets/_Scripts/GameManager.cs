@@ -13,7 +13,7 @@ public class GameManager : MonoBehaviour
 
     [Header("References")]
     public MapGrid map;
-    public TempFoodSpawner foodSpawner;
+    public FoodSpawner foodSpawner;
     //public TempSnakeSpawner tempSnakeSpawner;
     public TestBuildSnake2 tempSnakeSpawner;
 
@@ -24,6 +24,7 @@ public class GameManager : MonoBehaviour
         instance = this;
     }
     #endregion
+
 
     #region TimeRewind
     public void LoadWorldState(string jsonWorldState)
@@ -45,7 +46,7 @@ public class GameManager : MonoBehaviour
             snakesPlayers[i].PrepareToLoad();
             worldState.saveStatePlayers[i].LoadSnake(snakesPlayers[i]);
         }
-        
+
 
 
         // Load Snakes AI
@@ -66,7 +67,7 @@ public class GameManager : MonoBehaviour
         string[] jsonSnakesPl = new string[snakesPlayers.Count];
         for (int i = 0; i < jsonSnakesPl.Length; i++)
         {
-            jsonSnakesPl[i] = JsonUtility.ToJson(snakesPlayers[i],true);
+            jsonSnakesPl[i] = JsonUtility.ToJson(snakesPlayers[i], true);
         }
         worldState.jsonSnakesPl = jsonSnakesPl;
 
@@ -132,7 +133,7 @@ public class GameManager : MonoBehaviour
 
 
 
-        Food newFood = foodSpawner.SpawnFood(foodPos);
+        Food newFood = foodSpawner.SpawnRandomFood(foodPos);
 
         newFood.block.playerId = id;
 

@@ -2,19 +2,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TestKeyboard : MonoBehaviour
+public class KeyRecorder : MonoBehaviour
 {
     public GameManager gameManager;
 
-    public KeyCode key1;
-    public KeyCode key2;
 
-    public bool testCheck;
 
+
+
+
+    // Internal Vars
+    bool heldOneSecond;
     float timerHold = 0;
 
-    public TempSnakeSpawner snakeSpawner;
-
+    KeyCode key1;
+    KeyCode key2;
 
     Dictionary<KeyCode, int> dictionary = new Dictionary<KeyCode, int>()
     {
@@ -87,25 +89,23 @@ public class TestKeyboard : MonoBehaviour
             }
         }
 
+        // Start Game
+        if (Input.GetKeyDown(KeyCode.Return))
+            gameManager.StartGame();
 
-
-
-
-
-
-
-        //timer
+        // If both record key are pressed, start timer
         if (Input.GetKey(key1) && Input.GetKey(key2))
         {
             timerHold += Time.deltaTime;
 
-            if (timerHold > 2 && !testCheck)
+            if (timerHold > 1 && !heldOneSecond)
             {
-                testCheck = true;
+                heldOneSecond = true;
 
-                TempSpawnSnake();
+                gameManager.AddNewPlayer(OrderKeyCodes(key1, key2));
+
             }
-                
+
         }
 
 
@@ -113,51 +113,19 @@ public class TestKeyboard : MonoBehaviour
         if (Input.GetKeyUp(key1) || Input.GetKeyUp(key2))
         {
             timerHold = 0;
-            testCheck = false;
+            heldOneSecond = false;
         }
 
-        /*
-
-        foreach (KeyValuePair<KeyCode, int> entry in dictionary)
-        {
-            if (Input.GetKey(entry.Key))
-            {
-                if (key1 == entry.Key)
-                    key2 = entry.Key;
-                else
-                    key1 = entry.Key;
-
-            }
-        }*/
-
-        /*
-        foreach (KeyCode vKey in System.Enum.GetValues(typeof(KeyCode)))
-        {
-            if (Input.GetKey(vKey))
-            {
-                //your code here
-                key = vKey;
-
-            }
-        }*/
-    }
-
-    void TempSpawnSnake()
-    {
-        gameManager.AddNewPlayer();
-        PlayerController pc = snakeSpawner.SpawnSnake().GetComponent<PlayerController>();
-
-        pc.keyLeft = OrderKeyCodes(key1, key2)[0];
-        pc.keyRight = OrderKeyCodes(key1, key2)[1];
-
-        /*
-        PlayerController pc = snakeSpawner.SpawnSnake().GetComponent<PlayerController>();
-
-        pc.keyLeft = OrderKeyCodes(key1, key2)[0];
-        pc.keyRight = OrderKeyCodes(key1, key2)[1];*/
     }
 
 
+    /// <summary>
+    /// Order two keys to left and right based on keyboard bosition
+    /// 
+    /// </summary>
+    /// <param name="key1"></param>
+    /// <param name="key2"></param>
+    /// <returns></returns>
     public KeyCode[] OrderKeyCodes(KeyCode key1, KeyCode key2)
     {
         int value1, value2;

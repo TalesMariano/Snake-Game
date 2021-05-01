@@ -291,10 +291,10 @@ public class MapGrid : MonoBehaviour
             .Where(pair => pair.Value == null) // Extract only the thing with value null
             .OrderBy(n => PositionCostFairDistance(n.X, n.Y, pos1, pos2)); // sort by distance value
 
-        foreach (var item in query)
-        {
-            print(string.Format("Position {0}-{1} : score = {2}", item.X, item.Y, PositionCostFairDistance(item.X, item.Y, pos1, pos2)));
-        }
+        //foreach (var item in query)
+        //{
+        //    print(string.Format("Position {0}-{1} : score = {2}", item.X, item.Y, PositionCostFairDistance(item.X, item.Y, pos1, pos2)));
+        //}
 
         // Return Random
         if (query.Any())
